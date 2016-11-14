@@ -44,7 +44,7 @@ static packet_t get_packet() {
         break;
       }
       i = (i + 1) % how_many;
-    } 
+    }
 
   }
   pkt.how_many = how_many;
@@ -62,20 +62,29 @@ static packet_t get_packet() {
 }
 
 static void packet_sender(int sig) {
+  signal(SIGALRM, SIG_IGN);
   packet_t pkt;
 
   pkt = get_packet();
+  pkt_total = pkt.how_many;
+  pkt_cnt++;
   // temp is just used for temporarily printing the packet.
   char temp[PACKET_SIZE + 2];
   strcpy(temp, pkt.data);
   temp[3] = '\0';
   printf ("Sending packet: %s\n", temp);
-  pkt_cnt++;
-
-  // TODO Create a packet_queue_msg for the current packet.
+  printf("tot: %d, no: %d\n", pkt.how_many, pkt.which);
+  packet_queue_msg packet_sent;
+  packet_sent.mtype = 1;
+  packet_sent.pkt = pkt;
   // TODO send this packet_queue_msg to the receiver. Handle any error appropriately.
+  if (msgsnd(msqid, &packet_sent, sizeof(packet_queue_msg), 0) == -1) {
+    perror("Error in sending message");
+    return;
+  }
   // TODO send SIGIO to the receiver if message sending was successful.
-  
+  kill(receiver_pid, SIGIO);
+  signal(SIGALRM, packet_sender);
 }
 
 int main(int argc, char **argv) {
@@ -91,29 +100,40 @@ int main(int argc, char **argv) {
   int i;
 
   struct itimerval interval;
-  struct sigaction act;           
+  struct sigaction act;
 
-  /* TODO Create a message queue */ 
- 
-  /*  TODO read the receiver pid from the queue and store it for future use*/
-  
+  msqid = msgget(key, 0666 | IPC_CREAT);
+  pid_queue_msg pid_pkt_recved;
+
+  if (msgrcv(msqid, &pid_pkt_recved, sizeof(pid_queue_msg), 0, 0) == -1) {
+    perror("Error in Receiving Pid of Receiver");
+    return -1;
+  }
+  receiver_pid = pid_pkt_recved.pid;
   printf("Got pid : %d\n", receiver_pid);
- 
+
   /* TODO - set up alarm handler -- mask all signals within it */
   /* The alarm handler will get the packet and send the packet to the receiver. Check packet_sender();
    * Don't care about the old mask, and SIGALRM will be blocked for us anyway,
    * but we want to make sure act is properly initialized.
    */
 
-  /*  
+  /*
    * TODO - turn on alarm timer ...
    * use  INTERVAL and INTERVAL_USEC for sec and usec values
   */
 
-
+  act.sa_handler = packet_sender;
+  act.sa_flags = 0;
+  sigemptyset(&act.sa_mask);
+  sigaction (SIGALRM, &act, NULL);
   /* And the timer */
-
-  /* NOTE: the below code wont run now as you have not set the SIGALARM handler. Hence, 
+  interval.it_interval.tv_sec = INTERVAL;
+  interval.it_interval.tv_usec = INTERVAL_USEC;
+  interval.it_value.tv_sec = INTERVAL;
+  interval.it_value.tv_usec = INTERVAL_USEC;
+  setitimer (ITIMER_REAL, &interval, NULL);
+  /* NOTE: the below code wont run now as you have not set the SIGALARM handler. Hence,
      set up the SIGALARM handler and the timer first. */
   for (i = 1; i <= k; i++) {
     printf("==========================%d\n", i);
@@ -122,7 +142,9 @@ int main(int argc, char **argv) {
       pause(); /* block until next packet is sent. SIGALARM will unblock and call the handler.*/
     }
     pkt_cnt = 0;
+    usleep(10000);
   }
 
+  msgctl(msqid, IPC_RMID, 0);
   return EXIT_SUCCESS;
 }
