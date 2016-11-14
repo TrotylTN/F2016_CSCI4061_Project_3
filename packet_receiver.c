@@ -36,7 +36,7 @@ static void packet_handler(int sig) {
   char temp_c[10];
   memcpy(temp_c, pack_recved.pkt.data, PACKET_SIZE);
   temp_c[3]= '\0';
-  printf("Msg: %s\n", temp_c);
+  printf("Packet received: %s\n", temp_c);
   printf("tot: %d, no: %d\n", ((packet_t *)chunk)->how_many, ((packet_t *)chunk)->which);
   message.data[message.num_packets] = chunk;
   message.num_packets++;
