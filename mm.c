@@ -119,7 +119,7 @@ static void timer_ours() {
   mm_t* mm;
   mm = (mm_t *) malloc(sizeof(mm_t));
   mm_init(mm, TESTNM, 1);
-  
+
   void* test[TESTNM];
   for (i = 0; i < TESTNM; i++) {
     test[i] = mm_get(mm);
@@ -153,7 +153,7 @@ static void timer_origin() {
           comp_time(time_s, time_e) / 1000.0);
 }
 
-int main() {
-  timer_ours();
-  timer_origin();
-}
+// int main() {
+//   timer_ours();
+//   timer_origin();
+// }

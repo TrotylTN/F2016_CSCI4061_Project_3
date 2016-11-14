@@ -7,8 +7,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#define INTERVAL 0
-#define INTERVAL_USEC 50000
 #define CHUNK_SIZE 64
 #define NUM_CHUNKS 1000000
 
