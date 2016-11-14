@@ -70,12 +70,20 @@ static void packet_sender(int sig) {
   strcpy(temp, pkt.data);
   temp[3] = '\0';
   printf ("Sending packet: %s\n", temp);
+  pkt_total = pkt.how_many;
   pkt_cnt++;
-  fprintf(stderr, "123456\n");
+  // fprintf(stderr, "123456\n");
   // TODO Create a packet_queue_msg for the current packet.
+  packet_queue_msg packet_sent;
+  packet_sent.mtype = 1;
+  packet_sent.pkt = pkt;
   // TODO send this packet_queue_msg to the receiver. Handle any error appropriately.
+  if (msgsnd(msqid, &packet_sent, sizeof(packet_queue_msg), 0) == -1) {
+    perror("Error in sending message");
+    return;
+  }
   // TODO send SIGIO to the receiver if message sending was successful.
-
+  kill(receiver_pid, SIGIO);
 }
 
 int main(int argc, char **argv) {
@@ -131,6 +139,7 @@ int main(int argc, char **argv) {
       pause(); /* block until next packet is sent. SIGALARM will unblock and call the handler.*/
     }
     pkt_cnt = 0;
+    usleep(10000);
   }
 
   return EXIT_SUCCESS;

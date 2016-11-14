@@ -20,19 +20,25 @@ static int pkt_total = 1;   /* how many packets to be received for the message *
 static void packet_handler(int sig) {
   packet_t pkt;
   void *chunk;
+  packet_queue_msg pack_recved;
+  if (msgrcv(msqid, &pack_recved, sizeof(packet_queue_msg), 0, 0) == -1) {
+    perror("Error in Receiving Packets");
+    return;
+  }
 
   chunk = mm_get(&mm);
   if (chunk == NULL) {
     perror("Error in allocate memory");
     return;
   }
-  if (msgrcv(msqid, &chunk, CHUNK_SIZE, 0, 0) == -1) {
-    perror("Error in Receiving Packets");
-    return;
-  }
+  fprintf(stderr, "before copy\n");
+  memcpy(chunk, &(pack_recved.pkt), sizeof(pack_recved.pkt));
+  fprintf(stderr, "copy successfully\n");
   message.data[message.num_packets] = chunk;
   message.num_packets++;
+  pkt_total = pack_recved.pkt.how_many;
   pkt_cnt++;
+  fprintf(stderr, "A packet received\n");
 }
 
 static char *assemble_message() {
@@ -46,10 +52,12 @@ static char *assemble_message() {
     perror("Error in allocate memory for string");
     return msg;
   }
+  fprintf(stderr, "before copy\n");
   for (i = 0; i < message.num_packets; i++) {
     strncpy(msg + ((packet_t *)message.data[i])->which,
             ((packet_t *)message.data[i])->data,
             PACKET_SIZE);
+    fprintf(stderr, "copy once\n");
     mm_put(&mm, message.data[i]);
   }
   pkt_total = 1;
@@ -89,13 +97,16 @@ int main(int argc, char **argv) {
 
   struct sigaction act;
   act.sa_handler = packet_handler;
+  act.sa_flags = 0;
+  sigemptyset(&act.sa_mask);
   sigaction(SIGIO, &act, NULL);
-
+  fprintf(stderr, "Ready to receive packet\n");
   for (i = 1; i <= k; i++) {
+
     while (pkt_cnt < pkt_total) {
       pause(); /* block until next packet */
     }
-
+    fprintf(stderr, "###received all packets\n");
     msg = assemble_message();
     if (msg == NULL) {
       perror("Failed to assemble message");

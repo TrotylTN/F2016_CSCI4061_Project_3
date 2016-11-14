@@ -1,9 +1,9 @@
 #ifndef PACKET_H
 #define PACKET_H
 
-#define INTERVAL 0
+#define INTERVAL 1
 // Interval for timer. Interval you need to send the packets to the receiver
-#define INTERVAL_USEC 500000
+#define INTERVAL_USEC 0
 
 #include <signal.h>
 #include <stdio.h>
@@ -18,7 +18,7 @@
 #define MAX_PACKETS 10  /* Max packets allowed in the message */
 #define PACKET_SIZE 3
 #define MSGSIZE 128
-#define key 4061 /* key which will be used for identifying the queue */
+#define key 4075 /* key which will be used for identifying the queue */
 #define QUEUE_MSG_TYPE 1 /* message type for queue messages. Send receive only these types of messages from the queue */
 
 typedef char data_t[PACKET_SIZE];
