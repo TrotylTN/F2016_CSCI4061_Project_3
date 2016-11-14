@@ -42,6 +42,10 @@ static char *assemble_message() {
   int msg_len = message.num_packets * sizeof(data_t);
 
   msg = (char *) malloc(msg_len * sizeof(char));
+  if (msg == NULL) {
+    perror("Error in allocate memory for string");
+    return msg;
+  }
   for (i = 0; i < message.num_packets; i++) {
     strncpy(msg + ((packet_t *)message.data[i])->which,
             ((packet_t *)message.data[i])->data,
@@ -82,7 +86,7 @@ int main(int argc, char **argv) {
     perror("Error in Sending Pid");
     return -1;
   }
-  /* TODO set up SIGIO handler to read incoming packets from the queue. Check packet_handler()*/
+
   struct sigaction act;
   act.sa_handler = packet_handler;
   sigaction(SIGIO, &act, NULL);
@@ -102,9 +106,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  // TODO deallocate memory manager
   mm_release(&mm);
-  // TODO remove the queue once done
   msgctl(msqid, IPC_RMID, 0);
   return EXIT_SUCCESS;
 }

@@ -71,7 +71,7 @@ static void packet_sender(int sig) {
   temp[3] = '\0';
   printf ("Sending packet: %s\n", temp);
   pkt_cnt++;
-
+  fprintf(stderr, "123456\n");
   // TODO Create a packet_queue_msg for the current packet.
   // TODO send this packet_queue_msg to the receiver. Handle any error appropriately.
   // TODO send SIGIO to the receiver if message sending was successful.
