@@ -21,25 +21,33 @@ static void packet_handler(int sig) {
   packet_t pkt;
   void *chunk;
 
-  // TODO get the "packet_queue_msg" from the queue.
-
-  // TODO extract the packet from "packet_queue_msg" and store it in the memory from memory manager
+  chunk = mm_get(&mm);
+  if (chunk == NULL) {
+    perror("Error in allocate memory");
+    return;
+  }
+  if (msgrcv(msqid, &chunk, CHUNK_SIZE, 0, 0) == -1) {
+    perror("Error in Receiving Packets");
+    return;
+  }
+  message.data[message.num_packets] = chunk;
+  message.num_packets++;
+  pkt_cnt++;
 }
 
-/*
- * TODO - Create message from packets ... deallocate packets.
- * Return a pointer to the message on success, or NULL
- */
 static char *assemble_message() {
 
   char *msg;
   int i;
   int msg_len = message.num_packets * sizeof(data_t);
 
-  /* TODO - Allocate msg and assemble packets into it */
-
-
-  /* reset these for next message */
+  msg = (char *) malloc(msg_len * sizeof(char));
+  for (i = 0; i < message.num_packets; i++) {
+    strncpy(msg + ((packet_t *)message.data[i])->which,
+            ((packet_t *)message.data[i])->data,
+            PACKET_SIZE);
+    mm_put(&mm, message.data[i]);
+  }
   pkt_total = 1;
   pkt_cnt = 0;
   message.num_packets = 0;

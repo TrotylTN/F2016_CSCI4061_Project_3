@@ -16,7 +16,7 @@
 #include "mm.h"
 
 #define MAX_PACKETS 10  /* Max packets allowed in the message */
-#define PACKET_SIZE 3  
+#define PACKET_SIZE 3
 #define MSGSIZE 128
 #define key 4061 /* key which will be used for identifying the queue */
 #define QUEUE_MSG_TYPE 1 /* message type for queue messages. Send receive only these types of messages from the queue */
@@ -34,7 +34,7 @@ typedef struct {
   int num_packets;
   void *data[MAX_PACKETS];
 } message_t;
- 
+
 /* The queue message used to send the pid */
 typedef struct {
   long mtype;

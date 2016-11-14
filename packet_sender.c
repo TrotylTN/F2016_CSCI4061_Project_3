@@ -93,11 +93,13 @@ int main(int argc, char **argv) {
   struct itimerval interval;
   struct sigaction act;
 
-  /* TODO Create a message queue */
   msqid = msgget(key, 0666 | IPC_CREAT);
   pid_queue_msg pid_pkt_recved;
-  /*  TODO read the receiver pid from the queue and store it for future use*/
-  msgrcv (msqid, &pid_pkt_recved, sizeof(pid_queue_msg), 0, 0);
+
+  if (msgrcv(msqid, &pid_pkt_recved, sizeof(pid_queue_msg), 0, 0) == -1) {
+    perror("Error in Receiving Pid of Receiver");
+    return -1;
+  }
   receiver_pid = pid_pkt_recved.pid;
   printf("Got pid : %d\n", receiver_pid);
 
@@ -112,9 +114,14 @@ int main(int argc, char **argv) {
    * use  INTERVAL and INTERVAL_USEC for sec and usec values
   */
 
-
+  act.sa_handler = packet_sender;
+  sigaction (SIGALRM, &act, NULL);
   /* And the timer */
-
+  interval.it_interval.tv_sec = INTERVAL;
+  interval.it_interval.tv_usec = INTERVAL_USEC;
+  interval.it_value.tv_sec = INTERVAL;
+  interval.it_value.tv_usec = INTERVAL_USEC;
+  setitimer (ITIMER_REAL, &interval, NULL);
   /* NOTE: the below code wont run now as you have not set the SIGALARM handler. Hence,
      set up the SIGALARM handler and the timer first. */
   for (i = 1; i <= k; i++) {
