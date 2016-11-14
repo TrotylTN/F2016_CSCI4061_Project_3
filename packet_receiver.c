@@ -9,9 +9,9 @@ static int pkt_cnt = 0;     /* how many packets have arrived for current message
 static int pkt_total = 1;   /* how many packets to be received for the message */
 
 /*
-   Handles the incoming packet. 
+   Handles the incoming packet.
    Store the packet in a chunk from memory manager.
-   The packets for given message will come out of order. 
+   The packets for given message will come out of order.
    Hence you need to take care to store and assemble it correctly.
    Example, message "aaabbb" can come as bbb -> aaa, hence, you need to assemble it
    as aaabbb.
@@ -20,9 +20,8 @@ static int pkt_total = 1;   /* how many packets to be received for the message *
 static void packet_handler(int sig) {
   packet_t pkt;
   void *chunk;
-      
-  // TODO get the "packet_queue_msg" from the queue.
 
+  // TODO get the "packet_queue_msg" from the queue.
 
   // TODO extract the packet from "packet_queue_msg" and store it in the memory from memory manager
 }
@@ -58,21 +57,33 @@ int main(int argc, char **argv) {
   int i;
   char *msg;
 
-  /* TODO - init memory manager for NUM_CHUNKS chunks of size CHUNK_SIZE each */
+  mm_init(&mm, NUM_CHUNKS, CHUNK_SIZE);
 
   message.num_packets = 0;
 
-  /* TODO initialize msqid to send pid and receive messages from the message queue. Use the key in packet.h */
-  
-  /* TODO send process pid to the sender on the queue */
-  
+  msqid = msgget(key, 0666 | IPC_CREAT);
+  if (msqid == -1) {
+    perror("Error in Creating Queue");
+    return -1;
+  }
+
+  pid_queue_msg pid_pkt_sent;
+  pid_pkt_sent.mtype = 1;
+  pid_pkt_sent.pid = getpid();
+  if (msgsnd(msqid, (void *)&pid_pkt_sent, sizeof(pid_queue_msg), 0) == -1) {
+    perror("Error in Sending Pid");
+    return -1;
+  }
   /* TODO set up SIGIO handler to read incoming packets from the queue. Check packet_handler()*/
+  struct sigaction act;
+  act.sa_handler = packet_handler;
+  sigaction(SIGIO, &act, NULL);
 
   for (i = 1; i <= k; i++) {
     while (pkt_cnt < pkt_total) {
       pause(); /* block until next packet */
     }
-  
+
     msg = assemble_message();
     if (msg == NULL) {
       perror("Failed to assemble message");
@@ -84,8 +95,8 @@ int main(int argc, char **argv) {
   }
 
   // TODO deallocate memory manager
-
+  mm_release(&mm);
   // TODO remove the queue once done
-  
+  msgctl(msqid, IPC_RMID, 0);
   return EXIT_SUCCESS;
 }
