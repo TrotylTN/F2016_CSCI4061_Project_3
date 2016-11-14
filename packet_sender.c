@@ -83,8 +83,8 @@ static void packet_sender(int sig) {
     return;
   }
   // TODO send SIGIO to the receiver if message sending was successful.
-  signal(SIGALRM, packet_sender);
   kill(receiver_pid, SIGIO);
+  signal(SIGALRM, packet_sender);
 }
 
 int main(int argc, char **argv) {
