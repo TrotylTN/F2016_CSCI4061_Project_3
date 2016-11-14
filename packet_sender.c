@@ -62,18 +62,18 @@ static packet_t get_packet() {
 }
 
 static void packet_sender(int sig) {
+  signal(SIGALRM, SIG_IGN);
   packet_t pkt;
 
   pkt = get_packet();
+  pkt_total = pkt.how_many;
+  pkt_cnt++;
   // temp is just used for temporarily printing the packet.
   char temp[PACKET_SIZE + 2];
   strcpy(temp, pkt.data);
   temp[3] = '\0';
   printf ("Sending packet: %s\n", temp);
-  pkt_total = pkt.how_many;
-  pkt_cnt++;
-  // fprintf(stderr, "123456\n");
-  // TODO Create a packet_queue_msg for the current packet.
+  printf("tot: %d, no: %d\n", pkt.how_many, pkt.which);
   packet_queue_msg packet_sent;
   packet_sent.mtype = 1;
   packet_sent.pkt = pkt;
@@ -83,6 +83,7 @@ static void packet_sender(int sig) {
     return;
   }
   // TODO send SIGIO to the receiver if message sending was successful.
+  signal(SIGALRM, packet_sender);
   kill(receiver_pid, SIGIO);
 }
 
@@ -123,6 +124,8 @@ int main(int argc, char **argv) {
   */
 
   act.sa_handler = packet_sender;
+  act.sa_flags = 0;
+  sigemptyset(&act.sa_mask);
   sigaction (SIGALRM, &act, NULL);
   /* And the timer */
   interval.it_interval.tv_sec = INTERVAL;
@@ -142,5 +145,6 @@ int main(int argc, char **argv) {
     usleep(10000);
   }
 
+  msgctl(msqid, IPC_RMID, 0);
   return EXIT_SUCCESS;
 }

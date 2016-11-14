@@ -18,6 +18,7 @@ static int pkt_total = 1;   /* how many packets to be received for the message *
    Hint: "which" field in the packet will be useful.
  */
 static void packet_handler(int sig) {
+  signal(SIGIO, SIG_IGN);
   packet_t pkt;
   void *chunk;
   packet_queue_msg pack_recved;
@@ -31,33 +32,33 @@ static void packet_handler(int sig) {
     perror("Error in allocate memory");
     return;
   }
-  fprintf(stderr, "before copy\n");
   memcpy(chunk, &(pack_recved.pkt), sizeof(pack_recved.pkt));
-  fprintf(stderr, "copy successfully\n");
+  char temp_c[10];
+  memcpy(temp_c, pack_recved.pkt.data, PACKET_SIZE);
+  temp_c[3]= '\0';
+  printf("Msg: %s\n", temp_c);
+  printf("tot: %d, no: %d\n", ((packet_t *)chunk)->how_many, ((packet_t *)chunk)->which);
   message.data[message.num_packets] = chunk;
   message.num_packets++;
   pkt_total = pack_recved.pkt.how_many;
   pkt_cnt++;
-  fprintf(stderr, "A packet received\n");
+  signal(SIGIO, packet_handler);
 }
 
 static char *assemble_message() {
-
   char *msg;
   int i;
-  int msg_len = message.num_packets * sizeof(data_t);
-
+  int msg_len = message.num_packets * sizeof(data_t) + 1;
   msg = (char *) malloc(msg_len * sizeof(char));
   if (msg == NULL) {
     perror("Error in allocate memory for string");
     return msg;
   }
-  fprintf(stderr, "before copy\n");
+  memset(msg, 0, msg_len * sizeof(char));
   for (i = 0; i < message.num_packets; i++) {
-    strncpy(msg + ((packet_t *)message.data[i])->which,
+    memcpy(msg + (PACKET_SIZE * ((packet_t *)message.data[i])->which),
             ((packet_t *)message.data[i])->data,
             PACKET_SIZE);
-    fprintf(stderr, "copy once\n");
     mm_put(&mm, message.data[i]);
   }
   pkt_total = 1;
@@ -100,19 +101,18 @@ int main(int argc, char **argv) {
   act.sa_flags = 0;
   sigemptyset(&act.sa_mask);
   sigaction(SIGIO, &act, NULL);
-  fprintf(stderr, "Ready to receive packet\n");
+  printf("Ready to receive packet\n");
   for (i = 1; i <= k; i++) {
-
+    printf("==========================%d\n", i);
     while (pkt_cnt < pkt_total) {
       pause(); /* block until next packet */
     }
-    fprintf(stderr, "###received all packets\n");
     msg = assemble_message();
     if (msg == NULL) {
       perror("Failed to assemble message");
     }
     else {
-      fprintf(stderr, "GOT IT: message=%s\n", msg);
+      printf("GOT IT: message=%s\n", msg);
       free(msg);
     }
   }
