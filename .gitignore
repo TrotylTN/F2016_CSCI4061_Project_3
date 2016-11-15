@@ -33,3 +33,6 @@ packet_sender
 # Debug files
 *.dSYM/
 *.su
+
+# Zip
+Project_3_G_49.zip
