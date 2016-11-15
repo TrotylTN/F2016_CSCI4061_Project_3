@@ -1,4 +1,8 @@
-
+/* CSci4061 F2016 Assignment 3
+ * login: zhou0745
+ * date: 11/15/16
+ * name: Tiannan Zhou, Annelies Odermann
+ * id: 5232494(zhou0745), 4740784(oderm008) */
 #include "packet.h"
 
 int msqid = -1;
@@ -18,7 +22,7 @@ static int pkt_total = 1;   /* how many packets to be received for the message *
    Hint: "which" field in the packet will be useful.
  */
 static void packet_handler(int sig) {
-  signal(SIGIO, SIG_IGN);
+  char temp_c[128];
   packet_t pkt;
   void *chunk;
   packet_queue_msg pack_recved;
@@ -33,16 +37,10 @@ static void packet_handler(int sig) {
     return;
   }
   memcpy(chunk, &(pack_recved.pkt), sizeof(pack_recved.pkt));
-  char temp_c[10];
-  memcpy(temp_c, pack_recved.pkt.data, PACKET_SIZE);
-  temp_c[3]= '\0';
-  printf("Packet received: %s\n", temp_c);
-  printf("tot: %d, no: %d\n", ((packet_t *)chunk)->how_many, ((packet_t *)chunk)->which);
   message.data[message.num_packets] = chunk;
   message.num_packets++;
   pkt_total = pack_recved.pkt.how_many;
   pkt_cnt++;
-  signal(SIGIO, packet_handler);
 }
 
 static char *assemble_message() {
@@ -103,7 +101,6 @@ int main(int argc, char **argv) {
   sigaction(SIGIO, &act, NULL);
   printf("Ready to receive packet\n");
   for (i = 1; i <= k; i++) {
-    printf("==========================%d\n", i);
     while (pkt_cnt < pkt_total) {
       pause(); /* block until next packet */
     }

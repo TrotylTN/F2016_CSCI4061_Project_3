@@ -63,7 +63,6 @@ void *mm_get(mm_t *mm) {
       mm->used_list[i] = 1;
       mm->used_cnt++;
       mm->avail_pos = i;
-      // fprintf(stderr, "allocated id: %d\n", i);
       return mm->pool + (i * mm->unit_size);
     }
   }
@@ -97,7 +96,6 @@ void mm_put(mm_t *mm, void *chunk) {
   }
   mm->used_list[shift_val] = 0;
   mm->used_cnt--;
-  // fprintf(stderr, "deleted id: %d\n", shift_val);
   return;
 }
 

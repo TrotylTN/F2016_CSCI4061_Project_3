@@ -1,4 +1,8 @@
-
+/* CSci4061 F2016 Assignment 3
+ * login: zhou0745
+ * date: 11/15/16
+ * name: Tiannan Zhou, Annelies Odermann
+ * id: 5232494(zhou0745), 4740784(oderm008) */
 #include <time.h>
 #include "packet.h"
 
@@ -62,7 +66,6 @@ static packet_t get_packet() {
 }
 
 static void packet_sender(int sig) {
-  signal(SIGALRM, SIG_IGN);
   packet_t pkt;
 
   pkt = get_packet();
@@ -73,18 +76,14 @@ static void packet_sender(int sig) {
   strcpy(temp, pkt.data);
   temp[3] = '\0';
   printf ("Sending packet: %s\n", temp);
-  printf("tot: %d, no: %d\n", pkt.how_many, pkt.which);
   packet_queue_msg packet_sent;
   packet_sent.mtype = 1;
   packet_sent.pkt = pkt;
-  // TODO send this packet_queue_msg to the receiver. Handle any error appropriately.
   if (msgsnd(msqid, &packet_sent, sizeof(packet_queue_msg), 0) == -1) {
     perror("Error in sending message");
     return;
   }
-  // TODO send SIGIO to the receiver if message sending was successful.
   kill(receiver_pid, SIGIO);
-  signal(SIGALRM, packet_sender);
 }
 
 int main(int argc, char **argv) {

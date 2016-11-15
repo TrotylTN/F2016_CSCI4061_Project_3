@@ -3,7 +3,7 @@
 
 #define INTERVAL 0
 // Interval for timer. Interval you need to send the packets to the receiver
-#define INTERVAL_USEC 500000
+#define INTERVAL_USEC 50000
 
 #include <signal.h>
 #include <stdio.h>
