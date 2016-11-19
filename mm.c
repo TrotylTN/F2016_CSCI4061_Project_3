@@ -126,20 +126,18 @@ void timer_ours() {
   int i;
   /* start timer */
   gettimeofday (&time_s, NULL);
-  mm_t* mm;
-  mm = (mm_t *) malloc(sizeof(mm_t));
-  mm_init(mm, TESTNM, 1);
+  mm_t mm;
+  mm_init(&mm, TESTNM, 1);
 
   void* test[TESTNM];
   for (i = 0; i < TESTNM; i++) {
-    test[i] = mm_get(mm);
+    test[i] = mm_get(&mm);
   }
   for (i = 0; i < TESTNM; i++) {
-    mm_put(mm, test[i]);
+    mm_put(&mm, test[i]);
   }
 
-  mm_release(mm);
-  free(mm);
+  mm_release(&mm);
   gettimeofday(&time_e, NULL);
 
   fprintf(stderr, "Time taken = %f msec\n",
