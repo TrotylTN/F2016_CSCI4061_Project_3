@@ -87,12 +87,6 @@ static void packet_sender(int sig) {
 }
 
 int main(int argc, char **argv) {
-  // for (int i = 0; i < 20; i++) {
-  //   timer_origin();
-  //   timer_ours();
-  //   printf("\n");
-  //   usleep(1000);
-  // }
   if (argc != 2) {
     printf("Usage: packet_sender <num of messages to send>\n");
     exit(-1);
