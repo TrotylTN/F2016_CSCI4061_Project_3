@@ -18,7 +18,7 @@ You just need to use GNU makefile to compile this project.
 * Tiannan Zhou
 	* Implemented packets sender and receiver (Part B)
 * Annelies Odermann
-	* Completed Memory Management (Part A)
+	* Completed Memory Management (Part A) and fixed stack smash bug.
 
 
 **Usage**

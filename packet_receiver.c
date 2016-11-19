@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
   struct sigaction act;
   act.sa_handler = packet_handler;
   act.sa_flags = 0;
-  sigemptyset(&act.sa_mask);
+  sigfillset(&act.sa_mask);
   sigaction(SIGIO, &act, NULL);
   printf("Ready to receive packet\n");
   for (i = 1; i <= k; i++) {

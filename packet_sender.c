@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
 
   act.sa_handler = packet_sender;
   act.sa_flags = 0;
-  sigemptyset(&act.sa_mask);
+  sigfillset(&act.sa_mask);
   sigaction (SIGALRM, &act, NULL);
   /* And the timer */
   interval.it_interval.tv_sec = INTERVAL;
