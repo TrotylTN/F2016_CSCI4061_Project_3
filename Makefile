@@ -13,4 +13,4 @@ mm: mm.o mm_main.c
 	gcc -o mm mm_main.c mm.o -g
 
 clean:
-	rm *.o packet_receiver packet_sender
+	rm *.o packet_receiver packet_sender mm
