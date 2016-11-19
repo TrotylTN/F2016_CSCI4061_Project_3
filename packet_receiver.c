@@ -1,6 +1,6 @@
 /* CSci4061 F2016 Assignment 3
  * login: zhou0745
- * date: 11/15/16
+ * date: 11/19/16
  * name: Tiannan Zhou, Annelies Odermann
  * id: 5232494(zhou0745), 4740784(oderm008) */
 #include "packet.h"
@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
   struct sigaction act;
   act.sa_handler = packet_handler;
   act.sa_flags = 0;
-  sigfillset(&act.sa_mask);
+  sigemptyset(&act.sa_mask);
   sigaction(SIGIO, &act, NULL);
   printf("Ready to receive packet\n");
   for (i = 1; i <= k; i++) {

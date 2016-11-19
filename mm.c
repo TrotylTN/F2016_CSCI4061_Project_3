@@ -140,7 +140,7 @@ void timer_ours() {
   mm_release(&mm);
   gettimeofday(&time_e, NULL);
 
-  fprintf(stderr, "Time taken = %f msec\n",
+  fprintf(stderr, "Our Memory Manager Time taken = %f msec\n",
           comp_time(time_s, time_e) / 1000.0);
 }
 
@@ -157,7 +157,7 @@ void timer_origin() {
 
   gettimeofday(&time_e, NULL);
 
-  fprintf(stderr, "Time taken = %f msec\n",
+  fprintf(stderr, "Native Malloc Time taken = %f msec\n",
           comp_time(time_s, time_e) / 1000.0);
 }
 
