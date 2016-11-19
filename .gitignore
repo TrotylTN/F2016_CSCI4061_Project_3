@@ -23,6 +23,7 @@
 # Executables
 packet_receiver
 packet_sender
+mm
 *.exe
 *.out
 *.app
