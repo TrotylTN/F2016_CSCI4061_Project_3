@@ -22,11 +22,10 @@ static int pkt_total = 1;   /* how many packets to be received for the message *
    Hint: "which" field in the packet will be useful.
  */
 static void packet_handler(int sig) {
-  char temp_c[128];
   packet_t pkt;
   void *chunk;
   packet_queue_msg pack_recved;
-  if (msgrcv(msqid, &pack_recved, sizeof(packet_queue_msg), 0, 0) == -1) {
+  if (msgrcv(msqid, &pack_recved, (sizeof(packet_queue_msg) - sizeof(long)), 0, 0) == -1) {
     perror("Error in Receiving Packets");
     return;
   }
@@ -89,7 +88,7 @@ int main(int argc, char **argv) {
   pid_queue_msg pid_pkt_sent;
   pid_pkt_sent.mtype = 1;
   pid_pkt_sent.pid = getpid();
-  if (msgsnd(msqid, (void *)&pid_pkt_sent, sizeof(pid_queue_msg), 0) == -1) {
+  if (msgsnd(msqid, (void *)&pid_pkt_sent, sizeof(pid_queue_msg) - sizeof(long), 0) == -1) {
     perror("Error in Sending Pid");
     return -1;
   }

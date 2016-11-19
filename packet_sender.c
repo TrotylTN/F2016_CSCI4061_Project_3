@@ -79,7 +79,7 @@ static void packet_sender(int sig) {
   packet_queue_msg packet_sent;
   packet_sent.mtype = 1;
   packet_sent.pkt = pkt;
-  if (msgsnd(msqid, &packet_sent, sizeof(packet_queue_msg), 0) == -1) {
+  if (msgsnd(msqid, &packet_sent, sizeof(packet_queue_msg) - sizeof(long), 0) == -1) {
     perror("Error in sending message");
     return;
   }
@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
   msqid = msgget(key, 0666 | IPC_CREAT);
   pid_queue_msg pid_pkt_recved;
 
-  if (msgrcv(msqid, &pid_pkt_recved, sizeof(pid_queue_msg), 0, 0) == -1) {
+  if (msgrcv(msqid, &pid_pkt_recved, sizeof(pid_queue_msg) - sizeof(long), 0, 0) == -1) {
     perror("Error in Receiving Pid of Receiver");
     return -1;
   }
