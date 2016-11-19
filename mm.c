@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "mm.h"
+#include <string.h>
 
 /* Return usec */
 double comp_time(struct timeval time_s, struct timeval time_e) {
@@ -27,6 +28,7 @@ int mm_init(mm_t *mm, int hm, int sz) {
   mm->tot = hm;
   mm->used_cnt = 0;
   mm->avail_pos = 0;
+  mm->del_pos = 0;
   mm->pool = NULL;
   mm->used_list = NULL;
 
@@ -41,10 +43,7 @@ int mm_init(mm_t *mm, int hm, int sz) {
     free(mm->pool);
     return -1;
   }
-  for (i = 0; i < mm->tot; i++) {
-    // initialize all list into non-used
-    mm->used_list[i] = 0;
-  }
+  memset(mm->used_list, 0, hm * sizeof(char));
   return 0;
 }
 
@@ -62,7 +61,7 @@ void *mm_get(mm_t *mm) {
     if (mm->used_list[i] == 0) {
       mm->used_list[i] = 1;
       mm->used_cnt++;
-      mm->avail_pos = i;
+      mm->avail_pos = i + 1;
       return mm->pool + (i * mm->unit_size);
     }
   }
@@ -70,7 +69,7 @@ void *mm_get(mm_t *mm) {
     if (mm->used_list[i] == 0) {
       mm->used_list[i] = 1;
       mm->used_cnt++;
-      mm->avail_pos = i;
+      mm->avail_pos = i + 1;
       return mm->pool + (i * mm->unit_size);
     }
   }
@@ -81,6 +80,7 @@ void *mm_get(mm_t *mm) {
 }
 
 void mm_put(mm_t *mm, void *chunk) {
+  int i;
   if (mm == NULL) { // bad address
     errno = EFAULT;
     return;
@@ -89,13 +89,22 @@ void mm_put(mm_t *mm, void *chunk) {
     errno = EFAULT;
     return;
   }
-  int shift_val = (chunk - mm->pool) / mm->unit_size;
-  if (shift_val >= mm->tot) { //overflow
-    errno = EFAULT;
-    return;
+  for (i = mm->del_pos; i < mm->tot; i++) {
+    if (mm->pool + (i * mm->unit_size) == chunk) {
+      mm->used_list[i] = 0;
+      mm->used_cnt--;
+      mm->del_pos = i + 1;
+      return;
+    }
   }
-  mm->used_list[shift_val] = 0;
-  mm->used_cnt--;
+  for (i = 0; i < mm->del_pos; i++) {
+    if (mm->pool + (i * mm->unit_size) == chunk) {
+      mm->used_list[i] = 0;
+      mm->used_cnt--;
+      mm->del_pos = i + 1;
+      return;
+    }
+  }
   return;
 }
 
@@ -106,37 +115,36 @@ void mm_release(mm_t *mm) {
   mm->tot = 0;
   mm->used_cnt = 0;
   mm->avail_pos = 0;
+  mm->del_pos = 0;
   return;
 }
 
 #define TESTNM 1000000
 
-static void timer_ours() {
+void timer_ours() {
   struct timeval time_s, time_e;
   int i;
   /* start timer */
   gettimeofday (&time_s, NULL);
-  mm_t* mm;
-  mm = (mm_t *) malloc(sizeof(mm_t));
-  mm_init(mm, TESTNM, 1);
+  mm_t mm;
+  mm_init(&mm, TESTNM, 1);
 
   void* test[TESTNM];
   for (i = 0; i < TESTNM; i++) {
-    test[i] = mm_get(mm);
+    test[i] = mm_get(&mm);
   }
   for (i = 0; i < TESTNM; i++) {
-    mm_put(mm, test[i]);
+    mm_put(&mm, test[i]);
   }
 
-  mm_release(mm);
-  free(mm);
+  mm_release(&mm);
   gettimeofday(&time_e, NULL);
 
   fprintf(stderr, "Time taken = %f msec\n",
           comp_time(time_s, time_e) / 1000.0);
 }
 
-static void timer_origin() {
+void timer_origin() {
   struct timeval time_s, time_e;
   int i;
   /* start timer */

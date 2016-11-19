@@ -87,7 +87,6 @@ static void packet_sender(int sig) {
 }
 
 int main(int argc, char **argv) {
-
   if (argc != 2) {
     printf("Usage: packet_sender <num of messages to send>\n");
     exit(-1);
@@ -110,17 +109,6 @@ int main(int argc, char **argv) {
   }
   receiver_pid = pid_pkt_recved.pid;
   printf("Got pid : %d\n", receiver_pid);
-
-  /* TODO - set up alarm handler -- mask all signals within it */
-  /* The alarm handler will get the packet and send the packet to the receiver. Check packet_sender();
-   * Don't care about the old mask, and SIGALRM will be blocked for us anyway,
-   * but we want to make sure act is properly initialized.
-   */
-
-  /*
-   * TODO - turn on alarm timer ...
-   * use  INTERVAL and INTERVAL_USEC for sec and usec values
-  */
 
   act.sa_handler = packet_sender;
   act.sa_flags = 0;
