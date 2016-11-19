@@ -6,7 +6,7 @@ packet_sender: mm.o packet_sender.c packet.h
 packet_receiver: mm.o packet_receiver.c packet.h
 	gcc -o packet_receiver packet_receiver.c mm.o -g
 
-mm.o: mm.c
+mm.o: mm.c mm.h
 	gcc -o mm.o -c mm.c
 
 clean:

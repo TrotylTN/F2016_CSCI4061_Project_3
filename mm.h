@@ -15,6 +15,7 @@ typedef struct {
   int tot;
   int used_cnt;    // count of used memory blocks
   int avail_pos;   // the position start to find available memory
+  int del_pos;
   void* pool;      // memory pool
   char* used_list; // the list indicate which memory is used
 } mm_t;
@@ -24,5 +25,7 @@ int mm_init(mm_t *mm, int num_chunks, int chunk_size);
 void *mm_get(mm_t *mm);
 void mm_put(mm_t *mm, void *chunk);
 void mm_release(mm_t *mm);
+void timer_ours();
+void timer_origin();
 
 #endif
