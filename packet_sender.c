@@ -64,7 +64,7 @@ static packet_t get_packet() {
 
   return pkt;
 }
-
+// Once receive a ALARM signo, send a packet of message.
 static void packet_sender(int sig) {
   packet_t pkt;
 
@@ -102,19 +102,19 @@ int main(int argc, char **argv) {
 
   msqid = msgget(key, 0666 | IPC_CREAT);
   pid_queue_msg pid_pkt_recved;
-
+  // Try to receive PID of the receiver
   if (msgrcv(msqid, &pid_pkt_recved, sizeof(pid_queue_msg) - sizeof(long), 0, 0) == -1) {
     perror("Error in Receiving Pid of Receiver");
     return -1;
   }
   receiver_pid = pid_pkt_recved.pid;
   printf("Got pid : %d\n", receiver_pid);
-
+  /* Set the action for SIGALRM */
   act.sa_handler = packet_sender;
   act.sa_flags = 0;
   sigfillset(&act.sa_mask);
   sigaction (SIGALRM, &act, NULL);
-  /* And the timer */
+  /* Set the timer */
   interval.it_interval.tv_sec = INTERVAL;
   interval.it_interval.tv_usec = INTERVAL_USEC;
   interval.it_value.tv_sec = INTERVAL;

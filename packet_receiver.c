@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
     perror("Error in Creating Queue");
     return -1;
   }
-
+  // send PID of this receiver to the sender
   pid_queue_msg pid_pkt_sent;
   pid_pkt_sent.mtype = 1;
   pid_pkt_sent.pid = getpid();
@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
     perror("Error in Sending Pid");
     return -1;
   }
-
+  // bind handler for SIGIO
   struct sigaction act;
   act.sa_handler = packet_handler;
   act.sa_flags = 0;
@@ -103,6 +103,7 @@ int main(int argc, char **argv) {
     while (pkt_cnt < pkt_total) {
       pause(); /* block until next packet */
     }
+    //assemble message when a set of packets have been both arrived
     msg = assemble_message();
     if (msg == NULL) {
       perror("Failed to assemble message");
@@ -112,7 +113,7 @@ int main(int argc, char **argv) {
       free(msg);
     }
   }
-
+  // release memory used by mm.
   mm_release(&mm);
   msgctl(msqid, IPC_RMID, 0);
   return EXIT_SUCCESS;
