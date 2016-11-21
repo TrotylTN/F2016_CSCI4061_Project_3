@@ -77,13 +77,21 @@ static void packet_sender(int sig) {
   temp[3] = '\0';
   printf ("Sending packet: %s\n", temp);
   packet_queue_msg packet_sent;
-  packet_sent.mtype = 1;
+  packet_sent.mtype = msg_key;
   packet_sent.pkt = pkt;
   if (msgsnd(msqid, &packet_sent, sizeof(packet_queue_msg) - sizeof(long), 0) == -1) {
     perror("Error in sending message");
     return;
   }
   kill(receiver_pid, SIGIO);
+}
+
+// handle exit
+void int_handler(int sig) {
+  printf("Received SIGINT...\n");
+  kill(receiver_pid, SIGINT);
+  msgctl(msqid, IPC_RMID, 0);
+  exit(0);
 }
 
 int main(int argc, char **argv) {
@@ -101,19 +109,33 @@ int main(int argc, char **argv) {
   struct sigaction act;
 
   msqid = msgget(key, 0666 | IPC_CREAT);
-  pid_queue_msg pid_pkt_recved;
   // Try to receive PID of the receiver
-  if (msgrcv(msqid, &pid_pkt_recved, sizeof(pid_queue_msg) - sizeof(long), 0, 0) == -1) {
+  pid_queue_msg pid_pkt_recved;
+  if (msgrcv(msqid, &pid_pkt_recved, sizeof(pid_queue_msg) - sizeof(long), rcv_key, 0) == -1) {
     perror("Error in Receiving Pid of Receiver");
     return -1;
   }
   receiver_pid = pid_pkt_recved.pid;
-  printf("Got pid : %d\n", receiver_pid);
+  printf("Got receiver's pid : %d\n", receiver_pid);
+  // send PID to receiver
+  pid_queue_msg pid_pkt_sent;
+  pid_pkt_sent.mtype = snd_key;
+  pid_pkt_sent.pid = getpid();
+  if (msgsnd(msqid, (void *)&pid_pkt_sent, sizeof(pid_queue_msg) - sizeof(long), 0) == -1) {
+    perror("Error in Sending Pid");
+    return -1;
+  }
   /* Set the action for SIGALRM */
   act.sa_handler = packet_sender;
   act.sa_flags = 0;
   sigfillset(&act.sa_mask);
   sigaction (SIGALRM, &act, NULL);
+  // Set the handler for SIGINT
+  struct sigaction actint;
+  actint.sa_handler = int_handler;
+  actint.sa_flags = 0;
+  sigfillset(&actint.sa_mask);
+  sigaction (SIGINT, &actint, NULL);
   /* Set the timer */
   interval.it_interval.tv_sec = INTERVAL;
   interval.it_interval.tv_usec = INTERVAL_USEC;

@@ -11,7 +11,7 @@ static message_t message;   /* current message structure */
 static mm_t mm;             /* memory manager will allocate memory for packets */
 static int pkt_cnt = 0;     /* how many packets have arrived for current message */
 static int pkt_total = 1;   /* how many packets to be received for the message */
-
+static int sender_pid;  //pid of the sender
 /*
    Handles the incoming packet.
    Store the packet in a chunk from memory manager.
@@ -22,10 +22,9 @@ static int pkt_total = 1;   /* how many packets to be received for the message *
    Hint: "which" field in the packet will be useful.
  */
 static void packet_handler(int sig) {
-  packet_t pkt;
   void *chunk;
   packet_queue_msg pack_recved;
-  if (msgrcv(msqid, &pack_recved, (sizeof(packet_queue_msg) - sizeof(long)), 0, 0) == -1) {
+  if (msgrcv(msqid, &pack_recved, (sizeof(packet_queue_msg) - sizeof(long)), msg_key, 0) == -1) {
     perror("Error in Receiving Packets");
     return;
   }
@@ -65,6 +64,15 @@ static char *assemble_message() {
   return msg;
 }
 
+// handle exit
+void int_handler(int sig) {
+  printf("Received SIGINT...\n");
+  kill(sender_pid, SIGINT);
+  mm_release(&mm);
+  msgctl(msqid, IPC_RMID, 0);
+  exit(0);
+}
+
 int main(int argc, char **argv) {
   if (argc != 2) {
     printf("Usage: packet_sender <num of messages to receive>\n");
@@ -86,18 +94,32 @@ int main(int argc, char **argv) {
   }
   // send PID of this receiver to the sender
   pid_queue_msg pid_pkt_sent;
-  pid_pkt_sent.mtype = 1;
+  pid_pkt_sent.mtype = rcv_key;
   pid_pkt_sent.pid = getpid();
   if (msgsnd(msqid, (void *)&pid_pkt_sent, sizeof(pid_queue_msg) - sizeof(long), 0) == -1) {
     perror("Error in Sending Pid");
     return -1;
   }
+  // Try to receive PID of the sender
+  pid_queue_msg pid_pkt_recved;
+  if (msgrcv(msqid, &pid_pkt_recved, sizeof(pid_queue_msg) - sizeof(long), snd_key, 0) == -1) {
+    perror("Error in Receiving Pid of Receiver");
+    return -1;
+  }
+  sender_pid = pid_pkt_recved.pid;
+  printf("Got sender's pid : %d\n", sender_pid);
   // bind handler for SIGIO
   struct sigaction act;
   act.sa_handler = packet_handler;
   act.sa_flags = 0;
   sigemptyset(&act.sa_mask);
   sigaction(SIGIO, &act, NULL);
+  // bind handler for SIGINT
+  struct sigaction actint;
+  actint.sa_handler = int_handler;
+  actint.sa_flags = 0;
+  sigfillset(&actint.sa_mask);
+  sigaction (SIGINT, &actint, NULL);
   printf("Ready to receive packet\n");
   for (i = 1; i <= k; i++) {
     while (pkt_cnt < pkt_total) {

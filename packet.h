@@ -21,6 +21,10 @@
 #define key 4061 /* key which will be used for identifying the queue */
 #define QUEUE_MSG_TYPE 1 /* message type for queue messages. Send receive only these types of messages from the queue */
 
+#define snd_key 12
+#define rcv_key 25
+#define msg_key 5
+
 typedef char data_t[PACKET_SIZE];
 
 typedef struct {
