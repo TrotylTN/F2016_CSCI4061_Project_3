@@ -83,7 +83,10 @@ int main(int argc, char **argv) {
   int i;
   char *msg;
 
-  mm_init(&mm, NUM_CHUNKS, CHUNK_SIZE);
+  if (mm_init(&mm, NUM_CHUNKS, CHUNK_SIZE) == -1) {
+    perror("Error in Malloc memory");
+    return -1;
+  }
 
   message.num_packets = 0;
 
